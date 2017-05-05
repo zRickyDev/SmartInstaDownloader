@@ -4,7 +4,8 @@
 import os.path
 import urllib, json
 import time, sys
-from pprint import pprint
+
+download_path "../InstagramPhotos"
 
 log_file = "log.txt"
 last_media_ids = []
@@ -35,7 +36,7 @@ while True:
 			id = node["id"]
 			with open(log_file) as myfile:
 				if not id in myfile.read():
-					urllib.urlretrieve(display_src, id + ".jpg")
+					urllib.urlretrieve(display_src, os.path.join(download_path, id + ".jpg"))
 					last_media_ids.append(id)
 					download_counter += 1
 					print("Downloaded image: " + id + ".jpg")
