@@ -26,6 +26,8 @@ while True:
 		# Check if file exists
 		if not os.path.exists(log_file):
 			open(log_file, 'a').close()
+		if not os.path.exists(download_path):
+                        os.makedirs(download_path)
 		
 		# Get media nodes from json data
 		image_nodes = data["user"]["media"]["nodes"]
