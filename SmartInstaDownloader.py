@@ -36,7 +36,8 @@ while True:
 			id = node["id"]
 			with open(log_file) as myfile:
 				if not id in myfile.read():
-					urllib.urlretrieve(display_src, os.path.join(download_path, id + ".jpg"))
+					full_path = os.path.join(download_path, id + ".jpg")
+					urllib.urlretrieve(display_src, full_path)
 					last_media_ids.append(id)
 					download_counter += 1
 					print("Downloaded image: " + id + ".jpg")
