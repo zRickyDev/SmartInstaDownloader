@@ -5,7 +5,7 @@ import os.path
 import urllib, json
 import time, sys
 
-download_path "../InstagramPhotos"
+download_path = "../InstagramPhotos"
 
 log_file = "log.txt"
 last_media_ids = []
