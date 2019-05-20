@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
 
-import os.path
-import urllib, json
-import time, sys
+import os
+import requests
+import time
+import csv
 
-download_path = "../InstagramPhotos"
+download_path = "./InstagramPhotos"
 
-log_file = "log.txt"
 last_media_ids = []
 download_counter = 0
 
@@ -19,38 +19,44 @@ full_url = base_url + profile_username + json_url_enabler
 while True:
 	try:
 		# Get json data
-		response = urllib.urlopen(full_url)
-		data = json.loads(response.read())
-		print ("Downloading user data...")
+		r = requests.get(full_url)
+		if r.status_code != 200:
+			print 'Something went wrong :('
+			exit()
 
-		# Check if file exists
-		if not os.path.exists(log_file):
-			open(log_file, 'a').close()
+		# Check if log file & download path exists
+		if not os.path.exists('log.csv'):
+			os.system('touch log.csv')
 		if not os.path.exists(download_path):
-                        os.makedirs(download_path)
+			os.makedirs(download_path)
 		
 		# Get media nodes from json data
-		image_nodes = data["user"]["media"]["nodes"]
+		edges_nodes = r.json()["graphql"]["user"]["edge_owner_to_timeline_media"]["edges"]
 		
 		# Download new images and save on storage
-		for node in image_nodes:
-			display_src = node["display_src"]
-			id = node["id"]
-			with open(log_file) as myfile:
-				if not id in myfile.read():
+		for edge in edges_nodes:
+			image_url = edge["node"]["display_url"]
+			id = edge["node"]["id"]
+			with open('log.csv') as ids_file:
+				reader = csv.reader(ids_file, delimiter=',')
+				if not id in reader:
 					full_path = os.path.join(download_path, id + ".jpg")
-					urllib.urlretrieve(display_src, full_path)
+					r = requests.get(image_url, stream=True)
+					if r.status_code == 200:
+						with open(full_path, 'wb') as f:
+							for chunk in r:
+								f.write(chunk)
 					last_media_ids.append(id)
 					download_counter += 1
 					print("Downloaded image: " + id + ".jpg")
 		print("Download has been finished for now...")		
 
 		# Writing new media id on file...
-		out_file = open("log.txt", "a")
-		for id in last_media_ids:
-			out_file.write(id)
-		out_file.close()
-		last_media_ids = []
+		with open("log.csv", "a") as out_file:
+			writer = csv.writer(out_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+			for id in last_media_ids:
+				writer.writerow([id])
+			last_media_ids = []
 
 		# Wait 600s before doing another parse
 		print("Now waiting 10 minutes before check if other pictures has been uploaded!")
@@ -58,4 +64,4 @@ while True:
 		
 	except KeyboardInterrupt:
 		print("Downloads in this session: " + str(download_counter))
-		sys.exit()
+		exit()
